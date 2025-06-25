@@ -7,6 +7,7 @@ def ext_on_grassmannian(E, F):
     """
     return (E.dual()*F).cohomology()
 
+
 def ext_on_total_space(k, n, E, F, bundle, cutoff=8):
     """
     compute the Ext of two HomogeneousIrreducible's (or direct sums of them).
@@ -36,7 +37,18 @@ def ext_on_total_space(k, n, E, F, bundle, cutoff=8):
         return "ERROR: this bundle is not supported (yet)"
     return (E.dual() * F * pushforward_structure_sheaf).cohomology()
 
+def higher_ext_on_total_space(k, n, E, F, bundle, cutoff=8):
+    check = True
+    cohomology = ext_on_total_space(k, n, E, F, bundle, cutoff)
+    for item in cohomology:
+        if item != "no cohomology":
+            if item["degree"] != 0:
+                check = False
+    return check 
 
+def higher_cohomlogy_on_total_space(k, n, E, bundle, cutoff=8):
+    structure_sheaf = hb.HomogeneousIrreducible(k, n, [], [])
+    return higher_ext_on_total_space(k, n, structure_sheaf, E, bundle, cutoff) 
 
 def is_it_tilting(k, n, E, bundle, cutoff):
     """
@@ -83,6 +95,6 @@ SecondWindowG35 = hb.HomogeneousDirectSum([
 )
 
 # and here we check that these bundles are indeed partially tilting
-
-print(f"Is the first generator tilting? {is_it_tilting(3, 5, FirstWindowG35, "U*(-2)", 7)}.")
-print(f"Is the second generator tilting? {is_it_tilting(3, 5, SecondWindowG35, "U*(-2)", 7)}.")
+if __name__ == '__main__':
+    print(f"Is the first generator tilting? {is_it_tilting(3, 5, FirstWindowG35, "U*(-2)", 7)}.")
+    print(f"Is the second generator tilting? {is_it_tilting(3, 5, SecondWindowG35, "U*(-2)", 7)}.")
