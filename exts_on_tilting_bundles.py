@@ -38,6 +38,9 @@ def ext_on_total_space(k, n, E, F, bundle, cutoff=8):
     return (E.dual() * F * pushforward_structure_sheaf).cohomology()
 
 def higher_ext_on_total_space(k, n, E, F, bundle, cutoff=8):
+    """
+    returns True if there are NO higher Exts.
+    """
     check = True
     cohomology = ext_on_total_space(k, n, E, F, bundle, cutoff)
     for item in cohomology:
@@ -96,5 +99,7 @@ SecondWindowG35 = hb.HomogeneousDirectSum([
 
 # and here we check that these bundles are indeed partially tilting
 if __name__ == '__main__':
-    print(f"Is the first generator tilting? {is_it_tilting(3, 5, FirstWindowG35, "U*(-2)", 7)}.")
-    print(f"Is the second generator tilting? {is_it_tilting(3, 5, SecondWindowG35, "U*(-2)", 7)}.")
+    print(f"Is the first generator tilting? {is_it_tilting(3, 5, FirstWindowG35, 'U*(-2)', 7)}.")
+    print(f"Is the second generator tilting? {is_it_tilting(3, 5, SecondWindowG35, 'U*(-2)', 7)}.")
+
+
