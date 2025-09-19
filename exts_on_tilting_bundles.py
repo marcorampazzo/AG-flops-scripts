@@ -20,7 +20,7 @@ def ext_on_total_space(k, n, E, F, bundle, cutoff=8):
 
     The cutoff consists in the highest symmetric power we consider in the expansion
     of the pushforward of the structure sheaf wrt the bundle map. After a given power,
-    everything becomes globally generated, and for our applications 7 or 8 is more than enough.
+    everything becomes globally generated.
     """
     pushforward_structure_sheaf = []
     if bundle == 'U*(-2)':

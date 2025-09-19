@@ -7,7 +7,7 @@ import utils
 
 class Partition:
     """
-    I made a custom class so that i can use '*' to denote the Littlewood--Richardson product
+    We made a custom class so that we can use '*' to denote the Littlewood--Richardson product
     (by the special method __mul__), to keep track of multiplicities and to have a clean print.
     Multiplicity is one by default
     """
@@ -58,9 +58,15 @@ class HomogeneousIrreducible:
                     result.append(HomogeneousIrreducible(self.k, self.n, item.partition, other_item.partition, total_multiplicity))
         return HomogeneousDirectSum(result)
     def __str__(self):
-        return f"{self.first_partition.partition}|{self.second_partition.partition}(×{self.multiplicity})"
+        return (
+            f"{self.first_partition.partition}|{self.second_partition.partition}"
+            f"(×{self.multiplicity})"
+    )
     def __repr__(self):
-        return f"{self.first_partition.partition}|{self.second_partition.partition}(×{self.multiplicity})"
+        return (
+            f"{self.first_partition.partition}|{self.second_partition.partition}"
+            f"(×{self.multiplicity})"
+    )
     def rank(self):
         return utils.weyl_dim(self.first_partition.partition) * utils.weyl_dim(self.second_partition.partition)
     def dual(self):
@@ -86,7 +92,6 @@ class HomogeneousIrreducible:
         """
         part1 = self.first_partition.partition
         part2 = self.second_partition.partition
-        # the following two lines are reduntant I think...
         padded_first = part1 + [0] * (self.k - len(part1))
         padded_second = part2 + [0] * (self.n - self.k - len(part2))
         total_partition = padded_first + padded_second
@@ -114,8 +119,8 @@ class HomogeneousIrreducible:
 
 class HomogeneousDirectSum(list):
     """
-    this class is just a wrapper for HomogeneousIrreducible. I made it so that
-    the tensor product is distributive wrt direct sum (as it is supposed to be)
+    this class is just a wrapper for HomogeneousIrreducible. We made it so that
+    the tensor product is distributive wrt direct sum
     """
     def __init__(self, summands=None):
         """
@@ -166,4 +171,3 @@ class HomogeneousDirectSum(list):
         cohomology of a direct sum is the direct sum of the cohomologies
         """
         return [X.cohomology() for X in self]
-
