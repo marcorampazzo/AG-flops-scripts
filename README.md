@@ -98,7 +98,8 @@ Running this file provides the proof of Theorem 5.8.
 
 ### `vanishings.py`
 
-A collection of computations of higher cohomology and Ext groups, reproducing results from the paper.
-Running this file provides the proof for Propositions 5.9, 5.10, 5.22, 5.25.
+ A collection of computations of higher cohomology and Ext groups, reproducing results from the paper.
+ Running this file provides the proof for Propositions 5.9, 5.10, 5.22, 5.25.
+
 ---
 
