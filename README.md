@@ -93,7 +93,7 @@ Running this file provides the proof of Theorem 5.8.
   Tests whether a bundle is (partially) tilting by checking vanishing of self-Exts on the total space.
 
 * **`FirstWindowG35`, `SecondWindowG35`**
-  Implementation of the window categories ... as `HomogeneousDirectSum` objects.
+  Implementation of the window categories defined by the first two bundles in Definition 5.5, as `HomogeneousDirectSum` objects.
 ---
 
 ### `vanishings.py`
