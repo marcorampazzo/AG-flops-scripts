@@ -97,6 +97,7 @@ SecondWindowG35 = hb.HomogeneousDirectSum([
     ]
 )
 
+
 # and here we check that these bundles are indeed partially tilting
 if __name__ == '__main__':
     print(f"Is the first generator tilting? {is_it_tilting(3, 5, FirstWindowG35, 'U*(-2)', 7)}.")

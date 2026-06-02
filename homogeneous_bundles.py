@@ -116,6 +116,10 @@ class HomogeneousIrreducible:
         else:
             return "no cohomology"
 
+    def euler(self):
+        coh = self.cohomology()
+        return ((-1)**(coh['degree'])) * coh['dimension']
+
 
 class HomogeneousDirectSum(list):
     """
@@ -171,3 +175,16 @@ class HomogeneousDirectSum(list):
         cohomology of a direct sum is the direct sum of the cohomologies
         """
         return [X.cohomology() for X in self]
+
+    def euler(self):
+        """
+        Euler characteristic of a direct sum is the direct sum of the Euler charactieristics
+        """
+
+        out = 0
+
+        for X in self:
+            out = out + X.euler() 
+        
+        return out
+
