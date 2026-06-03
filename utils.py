@@ -85,3 +85,17 @@ def weyl_dim(partition):
     return int(dim)
 
 
+def flatten(my_list):
+    out = []
+    for item in my_list:
+        if not isinstance(item, list):
+            out.append(item)
+        else:
+            out.extend(flatten(item))
+    return out
+
+
+
+# l = [[1,2, [1,2, [1, 2]]], 'a string', [[2], [[11]], 1, 1, 1]]
+
+# print(flatten(l))

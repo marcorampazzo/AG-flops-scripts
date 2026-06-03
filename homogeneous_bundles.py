@@ -32,8 +32,10 @@ class HomogeneousIrreducible:
     the first partition is a list representing a Schur power of U*, while
     the second represents a Schur power of Q
     Multiplicity is one by default
+    Twist is a feature of this specific problem. If twist is nonzero, this class describes a pullback of the bundle
+    to the projectivization of Q*+O(-1) on G(k, n), twisted by O_rel (twist).
     """
-    def __init__(self, k, n, first_partition, second_partition, multiplicity=1):
+    def __init__(self, k, n, first_partition, second_partition, multiplicity=1, twist=0, shift=0):
         self.k = k
         self.n = n
         """
@@ -43,29 +45,37 @@ class HomogeneousIrreducible:
         self.first_partition = Partition(first_partition + [0] * (k - len(first_partition)), 1)
         self.second_partition = Partition(second_partition + [0] * (n - k - len(second_partition)), 1)
         self.multiplicity= multiplicity
-    def __mul__(self, other_double_partition):
+        self.twist = twist
+        self.shift = shift
+    def __mul__(self, other_irreducible_bundle):
         """
         we compute the product of two HomogeneousVectorBundle's with '*'. Littlewood--Richardson is applied
         on both partitions.
         """
         result = []
-        result_first_partitions = self.first_partition * other_double_partition.first_partition
-        result_second_partitions = self.second_partition * other_double_partition.second_partition
+        result_first_partitions = self.first_partition * other_irreducible_bundle.first_partition
+        result_second_partitions = self.second_partition * other_irreducible_bundle.second_partition
         for item in result_first_partitions:
             for other_item in result_second_partitions:
                 if len(item.partition) <= self.k and len(other_item.partition) <= self.n-self.k:
-                    total_multiplicity = self.multiplicity * other_double_partition.multiplicity * item.multiplicity * other_item.multiplicity
-                    result.append(HomogeneousIrreducible(self.k, self.n, item.partition, other_item.partition, total_multiplicity))
+                    total_multiplicity = self.multiplicity * other_irreducible_bundle.multiplicity * item.multiplicity * other_item.multiplicity
+                    total_twist = self.twist + other_irreducible_bundle.twist
+                    total_shift = self.shift + other_irreducible_bundle.shift
+                    result.append(HomogeneousIrreducible(self.k, self.n, item.partition, other_item.partition, total_multiplicity, total_twist, total_shift))
         return HomogeneousDirectSum(result)
     def __str__(self):
         return (
             f"{self.first_partition.partition}|{self.second_partition.partition}"
+            f" × O_rel({self.twist})"
+            f"[{self.shift}]"
             f"(×{self.multiplicity})"
     )
     def __repr__(self):
         return (
             f"{self.first_partition.partition}|{self.second_partition.partition}"
-            f"(×{self.multiplicity})"
+            f" × O_rel({self.twist})"
+            f"[{self.shift}]"
+            f"(× {self.multiplicity})"
     )
     def rank(self):
         return utils.weyl_dim(self.first_partition.partition) * utils.weyl_dim(self.second_partition.partition)
@@ -82,14 +92,39 @@ class HomogeneousIrreducible:
         twisted_first = [x + t for x in dual_first]
         twisted_second = [x + t for x in dual_second]
         # return a new HomogeneousIrreducible (with same multiplicity)
-        return HomogeneousIrreducible(self.k, self.n, twisted_first, twisted_second, self.multiplicity)
+        return HomogeneousIrreducible(self.k, self.n, twisted_first, twisted_second, self.multiplicity, -self.twist)
 
-    def cohomology(self):
+    def pushforward(self):
+        if self.twist == 0:
+            return self
+        elif self.twist > 0:
+            list_of_bundles = [] # the summands appearing  in the pushforward of O(twist)
+            for l in range(self.twist+1):
+                list_of_bundles.append(HomogeneousIrreducible(self.k, self.n, [self.twist for i in range(self.k)], [l for i in range(self.n - self.k - 1)], self.shift))
+            pushforward_of_lb = HomogeneousDirectSum(list_of_bundles)
+                # print(f"pushforward of the line bundle: {pushforward_of_lb}")
+            self.twist = 0
+            return pushforward_of_lb * self
+        elif self.twist > -5:
+            return 0
+        else: # we use Serre duality
+            canonical = HomogeneousIrreducible(self.k, self.n, [], [4 for i in range(self.n - self.k)], 1, -5)
+            new_bundle = self.dual() * canonical
+            if isinstance(new_bundle, HomogeneousIrreducible): 
+                new_bundle.shift = new_bundle.shift + 4
+            elif isinstance(new_bundle, HomogeneousDirectSum):
+                for item in new_bundle:
+                    item.shift = item.shift + 4
+            return new_bundle.pushforward()
+
+    def bott(self):
         """
         compute cohomology with Borel--Weyl--Bott.
         If rep is true, the output has the form {"representation": [,,,], "dimension": k, "degree": p},
         otherwise  {"representation": [,,,], "degree": p}
         """
+        if self.multiplicity == 0:
+            return 'acyclic'
         part1 = self.first_partition.partition
         part2 = self.second_partition.partition
         padded_first = part1 + [0] * (self.k - len(part1))
@@ -105,20 +140,40 @@ class HomogeneousIrreducible:
                 if utils.is_decreasing(total_partition):
                     total_partition = utils.subtract_rho(total_partition)
                     return {
-                        "representaiton": utils.normalize_partition(total_partition),
+                        "representation": utils.normalize_partition(total_partition),
                         "dimension": utils.weyl_dim(total_partition),
-                        "degree": degree
+                        "degree": degree + self.shift
                     }
                 else:
                     utils.swap_first_increase(total_partition)
                     degree = degree + 1
         # acyclic case
         else:
-            return "no cohomology"
+            return "acyclic"
+        
+    def cohomology(self):
+        if self.multiplicity == 0:
+            return 'acyclic'
+        return self.pushforward().bott()
 
     def euler(self):
         coh = self.cohomology()
-        return ((-1)**(coh['degree'])) * coh['dimension']
+        # print(coh)
+        # if coh[0] == 'acyclic':
+        #     return 0
+
+        if coh == 'acyclic':
+            return 0
+        
+        if isinstance(coh, dict):
+            # print(coh)
+            return ((-1)**(coh['degree'])) * coh['dimension']
+        else:
+            out = 0
+            for item in coh:
+                # print(item)
+                out = out + ((-1)**(item['degree'])) * item['dimension']
+            return out
 
 
 class HomogeneousDirectSum(list):
@@ -169,12 +224,27 @@ class HomogeneousDirectSum(list):
             prod = other * A
             out.extend(prod if isinstance(prod, list) else [prod])
         return HomogeneousDirectSum(out)
-
+    
+    def pushforward(self):
+        """
+        pushforward of a direct sum is the direct sum of the pushforwards
+        """
+        out = [X.pushforward() for X in self]
+        return HomogeneousDirectSum(out)
+    
+    def bott(self):
+        """
+        cohomology of a direct sum is the direct sum of the cohomologies
+        """
+        out = [X.bott() for X in self]
+        return utils.flatten(out)
+    
     def cohomology(self):
         """
         cohomology of a direct sum is the direct sum of the cohomologies
         """
-        return [X.cohomology() for X in self]
+        out = [X.cohomology() for X in self]
+        return utils.flatten(out)
 
     def euler(self):
         """
@@ -187,4 +257,3 @@ class HomogeneousDirectSum(list):
             out = out + X.euler() 
         
         return out
-
