@@ -53,15 +53,21 @@ class HomogeneousIrreducible:
         on both partitions.
         """
         result = []
-        result_first_partitions = self.first_partition * other_irreducible_bundle.first_partition
-        result_second_partitions = self.second_partition * other_irreducible_bundle.second_partition
-        for item in result_first_partitions:
-            for other_item in result_second_partitions:
-                if len(item.partition) <= self.k and len(other_item.partition) <= self.n-self.k:
-                    total_multiplicity = self.multiplicity * other_irreducible_bundle.multiplicity * item.multiplicity * other_item.multiplicity
-                    total_twist = self.twist + other_irreducible_bundle.twist
-                    total_shift = self.shift + other_irreducible_bundle.shift
-                    result.append(HomogeneousIrreducible(self.k, self.n, item.partition, other_item.partition, total_multiplicity, total_twist, total_shift))
+        if isinstance(other_irreducible_bundle, HomogeneousIrreducible):
+            result_first_partitions = self.first_partition * other_irreducible_bundle.first_partition
+            result_second_partitions = self.second_partition * other_irreducible_bundle.second_partition
+            for item in result_first_partitions:
+                for other_item in result_second_partitions:
+                    if len(item.partition) <= self.k and len(other_item.partition) <= self.n-self.k:
+                        total_multiplicity = self.multiplicity * other_irreducible_bundle.multiplicity * item.multiplicity * other_item.multiplicity
+                        total_twist = self.twist + other_irreducible_bundle.twist
+                        total_shift = self.shift + other_irreducible_bundle.shift
+                        result.append(HomogeneousIrreducible(self.k, self.n, item.partition, other_item.partition, total_multiplicity, total_twist, total_shift))
+        elif isinstance(other_irreducible_bundle, HomogeneousDirectSum):
+            result = []
+            for summand in other_irreducible_bundle:
+                result.append(self * summand)
+            result = utils.flatten(result)
         return HomogeneousDirectSum(result)
     def __str__(self):
         return (
@@ -106,7 +112,7 @@ class HomogeneousIrreducible:
             self.twist = 0
             return pushforward_of_lb * self
         elif self.twist > -5:
-            return 0
+            return HomogeneousIrreducible(self.k, self.n, [], [], 0, 0, 0) # the zero bundle is O with multiplicity 0 (i know it's horrible...)
         else: # we use Serre duality
             canonical = HomogeneousIrreducible(self.k, self.n, [], [4 for i in range(self.n - self.k)], 1, -5)
             new_bundle = self.dual() * canonical
@@ -142,7 +148,8 @@ class HomogeneousIrreducible:
                     return {
                         "representation": utils.normalize_partition(total_partition),
                         "dimension": utils.weyl_dim(total_partition),
-                        "degree": degree + self.shift
+                        "degree": degree + self.shift,
+                        "multiplicity": self.multiplicity
                     }
                 else:
                     utils.swap_first_increase(total_partition)
@@ -167,12 +174,13 @@ class HomogeneousIrreducible:
         
         if isinstance(coh, dict):
             # print(coh)
-            return ((-1)**(coh['degree'])) * coh['dimension']
+            return ((-1)**(coh['degree'])) * coh['dimension'] * coh['multiplicity']
         else:
             out = 0
             for item in coh:
                 # print(item)
-                out = out + ((-1)**(item['degree'])) * item['dimension']
+                if item != 'acyclic':
+                    out = out + ((-1)**(item['degree'])) * item['dimension'] * coh['multiplicity']
             return out
 
 
@@ -230,6 +238,7 @@ class HomogeneousDirectSum(list):
         pushforward of a direct sum is the direct sum of the pushforwards
         """
         out = [X.pushforward() for X in self]
+        out = utils.flatten(out)
         return HomogeneousDirectSum(out)
     
     def bott(self):
